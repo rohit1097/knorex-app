@@ -1,0 +1,38 @@
+pipeline{
+    agent any
+    stages {
+        stage('git clone') {
+            steps{
+                git branch: 'master',
+                url: 'https://github.com/rohit1097/knorex-app.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                  sh 'docker build . -t knorex-app:latest'
+                  sh 'docker tag knorex-app:latest rohit1097/knorex-app'
+                }
+            }
+        }
+        stage('Pushing Image on Dockerhub') {
+            steps {
+                script {
+                   withCredentials([string(credentialsId: 'dockerhubp', variable: 'dockerhubp')]) {
+                   sh 'docker login -u rohit1097 -p ${dockerhubp}'
+                   sh 'docker push rohit1097/knorex-app'
+			}
+		}
+		
+	}	
+}
+        stage("cleaning docker image"){
+            steps {
+                script {
+                  sh 'docker rmi knorex-app:latest'
+                  sh 'docker rmi rohit1097/knorex-app'
+              }
+          }
+        }
+}
+}
